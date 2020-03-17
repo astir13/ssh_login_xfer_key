@@ -1,4 +1,4 @@
-# ssh_login_xfer_key
+# transfer_id_pub
 log into ssh host with username &amp; password + transfer your ssh key to authorised_hosts
 
 This bash script is intended for use on OSX or Linux hosts.
