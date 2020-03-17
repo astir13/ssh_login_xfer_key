@@ -1,0 +1,57 @@
+#!/bin/bash
+#
+# ###########################################################
+# This bash script is intended for use on OSX or Linux hosts.
+# It will do the following by unser interaction:
+# 1 - generate a public ecdsa 521 bit public key in your .ssh directory, if it does not exist
+# 2 - ask you for the remote user name
+# 3 - aks you for the remote host name
+# 4 - uses ssh to login to the remote host and ask for the password
+# 5 - transfers the .ssh/id_ecdsa.pub key to the remote host 
+# 6 - stays logged in and gives you a prompt to start working :-)
+#
+# Copyright: Stefan Pielmeier, Aalborg, Denmark, 2020
+# License: MIT, see file LICENSE (may not be removed)
+#
+echo "this script transfers your ssh rsa id to another host"
+echo "[I]nfo: checking for public key"
+
+key=~/.ssh/id_ecdsa.pub
+
+# check that a key is existing
+if [[ -e ${key} ]]; then
+  echo "[I]nfo: public key existing"
+else # if not, generate it
+  echo "[I]nfo: generating public key, please press return at the questions"
+  ssh-keygen -t ecdsa -b 521
+  if [[ $? != 0 ]]; then
+    echo "[F]atal error happened during keygeneration, check that ssh client is installed"
+    exit 1
+  fi
+  if [[ -e ${key} ]]; then
+    echo "[I]nfo: found key '${key}'"
+  else
+    echo "[F]atal: even though key generation succeeded, the key '${key}' cannot be found"
+    exit 1
+  fi
+  echo "[I]nfo: sucessfully generated ${key}"
+fi
+
+# then get the transfer target details
+echo ""
+echo ">> please input the remote user name"
+read name
+echo ">> please input the remote host name"
+read host
+echo "[I]nfo: try to transfer your key to ${name}@${host}"
+
+# transfer the key
+cat $key | ssh -l ${name} ${host} "( cat - >> ~/.ssh/authorized_keys )"
+if [[ $? == 0 ]]; then
+  echo "[I]nfo:success"
+else
+  echo "[E]rror:transfer failed"
+  exit 1
+fi
+
+ssh -l${name} ${host}
